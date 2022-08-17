@@ -3,10 +3,14 @@ package com.example.restservices.controllers;
 import java.util.List;
 import java.util.Optional;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,22 +23,25 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.restservices.entities.Users;
 import com.example.restservices.exceptions.UserExistsException;
+import com.example.restservices.exceptions.UserNameNotFoundException;
 import com.example.restservices.exceptions.UserNotFoundException;
 import com.example.restservices.services.UserService;
 
+
+@Validated
 @RestController
 public class UserController {
 
 	@Autowired
 	private UserService userService;
-	
+
 	@GetMapping("/users")
 	public List<Users> getAllUsers() {
 		return userService.getAllUsers();
 	}
-	
+
 	@PostMapping("/users")
-	public ResponseEntity<Void> createuser(@RequestBody Users user, UriComponentsBuilder builder) {
+	public ResponseEntity<Void> createuser(@Valid @RequestBody Users user, UriComponentsBuilder builder) {
 		try {
 			userService.createUser(user);
 			HttpHeaders headers = new HttpHeaders();
@@ -44,26 +51,26 @@ public class UserController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
 		}
 	}
-	
+
 	@GetMapping("/users/{id}")
-	public Optional<Users> getUserById(@PathVariable("id") Long id) {
+	public Optional<Users> getUserById(@PathVariable("id") @Min(value = 1) Long id) {
 		try {
 			return userService.getUserById(id);
-		} catch(UserNotFoundException ex) {
+		} catch (UserNotFoundException ex) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
 		}
 	}
-	
+
 	@PutMapping("/users/{id}")
 	public Users updateUserById(@PathVariable Long id, @RequestBody Users user) {
 		try {
-			return userService.updateUserById(id, user);	
-		} catch(UserNotFoundException ex) {
+			return userService.updateUserById(id, user);
+		} catch (UserNotFoundException ex) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
 		}
-				
+
 	}
-	
+
 	@DeleteMapping("/users/{id}")
 	public void deleteUserById(@PathVariable Long id) {
 		userService.deleteUserById(id);
@@ -71,8 +78,13 @@ public class UserController {
 	}
 
 	@GetMapping("users/byusername/{username}")
-	public Users getUserByUsername(@PathVariable String username) {
-		return userService.getUserByUserName(username);
+	public Users getUserByUsername(@PathVariable String username) throws UserNameNotFoundException {
+		Users user = userService.getUserByUserName(username);
+		if (user != null)
+			return user;
+		else
+			throw new UserNameNotFoundException("Username: '"+username+"' not found, please enter correct username");
+
 	}
-	
+
 }

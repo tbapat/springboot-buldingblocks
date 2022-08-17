@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.example.restservices.entities.Users;
 import com.example.restservices.exceptions.UserExistsException;
+import com.example.restservices.exceptions.UserNameNotFoundException;
 import com.example.restservices.exceptions.UserNotFoundException;
 import com.example.restservices.repositories.UserRepository;
 
